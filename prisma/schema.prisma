@@ -1,0 +1,95 @@
+// Prisma schema — database lives where DATABASE_URL points.
+// Local: SQLite file (e.g. ./prisma/dev.db).
+// Users: stored in User table; only developer can add/edit via DB or seed.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id           String   @id @default(cuid())
+  username     String   @unique
+  passwordHash String
+  createdAt    DateTime @default(now())
+}
+
+model Customer {
+  id   String @id @default(cuid())
+  name String @unique
+}
+
+model Driver {
+  id   String @id @default(cuid())
+  name String @unique
+}
+
+model Vehicle {
+  id   String @id @default(cuid())
+  name String @unique
+}
+
+model Destination {
+  id                  String  @id @default(cuid())
+  name                String  @unique
+  defaultRate         Float   @default(0)
+  defaultDeliveryCost Float  @default(0)
+  defaultFuel         Float   @default(0)
+  defaultTolls        Float   @default(0)
+  defaultLoading      Float   @default(0)
+  defaultUangBongkar  Float   @default(0)
+  defaultPettyCash    Float   @default(0)
+}
+
+model Product {
+  id       String  @id @default(cuid())
+  name     String  @unique
+  kgPerBag Float   @default(25)
+}
+
+model FromOrigin {
+  id   String @id @default(cuid())
+  name String @unique
+}
+
+model Invoice {
+  id                String   @id @default(cuid())
+  date              String   // Tanggal surat jalan
+  invoiceNumber     String   @unique
+  nomorSuratJalan   String?
+  noPO              String?
+  from              String?  // From (asal) - name from master
+  customer          String
+  driver            String?
+  vehicle           String?
+  destination       String?
+  rate              Float    @default(0)
+  qty               Float    @default(1)
+  netRevenue        Float    @default(0)
+  deliveryCost      Float    @default(0)
+  fuel              Float    @default(0)
+  tolls             Float    @default(0)
+  loadingFees       Float    @default(100000)
+  uangBongkar       Float    @default(100000)
+  pettyCash         Float    @default(0)
+  totalCost         Float    @default(0)
+  netProfit         Float    @default(0)
+  status            String   @default("Pending")
+  paidAt            String?  // tanggal dibayar (YYYY-MM-DD) when status LUNAS
+  createdAt         DateTime @default(now())
+  items             InvoiceItem[]
+}
+
+model InvoiceItem {
+  id          String  @id @default(cuid())
+  invoiceId   String
+  invoice     Invoice @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
+  productId   String?
+  productName String  // denormalized for display
+  bags        Float   @default(0)
+  kg          Float   @default(0)
+}
